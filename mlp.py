@@ -46,7 +46,7 @@ def Addition_mod_p_data(p, eq_token, op_token):
     op = torch.ones_like(x) * op_token
     result = (x + y) % p
 
-    # "All of our experiments used a small transformer trained on datasets of
+    # our experiments use a 3 layer MLP with an embedding trained on datasets of
     # equations of the form a◦b = c, where each of “a”, “◦”, “b”, “=”, and “c”
     # is a seperate token"
     return torch.stack([x, op, y, eq, result])
@@ -63,10 +63,7 @@ def main(args):
     eq_token = args.p
     op_token = args.p + 1
 
-    # "We trained a standard decoder-only transformer (Vaswani et al., 2017)
-    # with causal attention masking, and calculated loss and accuracy only on
-    # the answer part of the equation. For all experiments we used a
-    # transformer with 2 layers, width 128, and 4 attention heads"
+    # We trained a MLP
     
     model=MLP(num_tokens=args.p+2, embedding_dim=128,hidden_dim=512, output_dim=args.p+2).to(device)
 
@@ -122,7 +119,7 @@ def main(args):
                     optimizer.step()
                     scheduler.step()
 
-                acc = (logits[-1].argmax(-1) == input[-1]).float().mean()
+                acc = (logits.argmax(-1) == input[-1]).float().mean()
                 total_acc += acc.item() * input.shape[-1]
 
             if is_train:
@@ -163,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--beta1", type=float, default=0.9)
     parser.add_argument("--beta2", type=float, default=0.98)
-    parser.add_argument("--weight_decay", type=float, default=0)
+    parser.add_argument("--weight_decay", type=float, default=1e-3)
     parser.add_argument("--optimizer", default="Adam")
     args = parser.parse_args()
     main(args)
