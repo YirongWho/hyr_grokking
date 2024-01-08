@@ -135,26 +135,6 @@ def main(args):
 
         if (e + 1) % 100 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            if args.train_fraction == 0.5:
-                plt.plot(steps, train_acc, label="train")
-                plt.plot(steps, val_acc, label="val")
-                plt.legend()
-                plt.title("Modular Addition (training on 50% of data)")
-                plt.xlabel("Optimization Steps")
-                plt.ylabel("Accuracy")
-                plt.xscale("log", base=10)
-                plt.savefig("figures/mlp/mlp_acc.png", dpi=150)
-                plt.close()
-
-                plt.plot(steps, train_loss, label="train")
-                plt.plot(steps, val_loss, label="val")
-                plt.legend()
-                plt.title("Modular Addition (training on 50% of data)")
-                plt.xlabel("Optimization Steps")
-                plt.ylabel("Loss")
-                plt.xscale("log", base=10)
-                plt.savefig("figures/mlp/mlp_loss.png", dpi=150)
-                plt.close()
             # save steps, train_acc, val_acc, train_loss, val_loss to a file
             torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/mlp/frac={args.train_fraction}.pt")
 
