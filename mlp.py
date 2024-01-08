@@ -70,8 +70,12 @@ def main(args):
     # "We train on the binary operation of Addition mod 97 with 50% of the data
     # in the training set."
     data = Addition_mod_p_data(args.p, eq_token, op_token)
-    train_idx, valid_idx = torch.randperm(data.shape[1]).split(data.shape[1] // 2)
+    train_fraction = args.train_fraction
+    train_size = int(train_fraction * data.shape[1])
+    rand_perm=torch.randperm(data.shape[1])
+    train_idx, valid_idx = rand_perm[:train_size], rand_perm[train_size:]
     train_data, valid_data = data[:, train_idx], data[:, valid_idx]
+
 
     # For most experiments we used AdamW optimizer with learning rate 10−3,
     # weight decay 1, β1 = 0.9, β2 = 0.98
@@ -131,36 +135,40 @@ def main(args):
 
         if (e + 1) % 100 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            plt.plot(steps, train_acc, label="train")
-            plt.plot(steps, val_acc, label="val")
-            plt.legend()
-            plt.title("Modular Addition (training on 50% of data)")
-            plt.xlabel("Optimization Steps")
-            plt.ylabel("Accuracy")
-            plt.xscale("log", base=10)
-            plt.savefig("figures/mlp/mlp_acc.png", dpi=150)
-            plt.close()
+            if args.train_fraction == 0.5:
+                plt.plot(steps, train_acc, label="train")
+                plt.plot(steps, val_acc, label="val")
+                plt.legend()
+                plt.title("Modular Addition (training on 50% of data)")
+                plt.xlabel("Optimization Steps")
+                plt.ylabel("Accuracy")
+                plt.xscale("log", base=10)
+                plt.savefig("figures/mlp/mlp_acc.png", dpi=150)
+                plt.close()
 
-            plt.plot(steps, train_loss, label="train")
-            plt.plot(steps, val_loss, label="val")
-            plt.legend()
-            plt.title("Modular Addition (training on 50% of data)")
-            plt.xlabel("Optimization Steps")
-            plt.ylabel("Loss")
-            plt.xscale("log", base=10)
-            plt.savefig("figures/mlp/mlp_loss.png", dpi=150)
-            plt.close()
+                plt.plot(steps, train_loss, label="train")
+                plt.plot(steps, val_loss, label="val")
+                plt.legend()
+                plt.title("Modular Addition (training on 50% of data)")
+                plt.xlabel("Optimization Steps")
+                plt.ylabel("Loss")
+                plt.xscale("log", base=10)
+                plt.savefig("figures/mlp/mlp_loss.png", dpi=150)
+                plt.close()
+            # save steps, train_acc, val_acc, train_loss, val_loss to a file
+            torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/mlp/frac={args.train_fraction}.pt")
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--p", type=int, default=97)
-    parser.add_argument("--budget", type=int, default=3e5)
-    parser.add_argument("--batch_size", type=int, default=512)
+    parser.add_argument("--p", type=int, default=23)
+    parser.add_argument("--budget", type=int, default=1e5)
+    parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--beta1", type=float, default=0.9)
     parser.add_argument("--beta2", type=float, default=0.98)
     parser.add_argument("--weight_decay", type=float, default=1e-3)
-    parser.add_argument("--optimizer", default="Adam")
+    parser.add_argument("--optimizer", default="AdamW")
+    parser.add_argument("--train_fraction", type=float, default=0.5)  
     args = parser.parse_args()
     main(args)
