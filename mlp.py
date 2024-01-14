@@ -138,7 +138,7 @@ def main(args):
             # save steps, train_acc, val_acc, train_loss, val_loss to a file
             torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/mlp/frac={args.train_fraction}.pt")
     # save model parameters
-    torch.save(model.state_dict(), f"results/mlp_test_128_512.pth")
+    torch.save(model.state_dict(), f"results/mlp_{args.train_fraction}.pth")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
