@@ -35,6 +35,28 @@ class MLP(nn.Module):
         
         return x
 
+def Addition_mod_q_data(p, eq_token, op_token):
+    """
+    x+y
+    """
+    q=p**2
+    x = torch.arange(q)
+    y = torch.arange(1,q)
+    x, y = torch.cartesian_prod(x, y).T
+
+    eq = torch.ones_like(x) * eq_token
+    op = torch.ones_like(x) * op_token
+    # x=a*p+b, y=c*p+d
+    a = x//p
+    b = x%p
+    c = y//p
+    d =  y%p
+    result = ((a+c)%p)*p+(b+d)%p
+
+    # our experiments use a 3 layer MLP with an embedding trained on datasets of
+    # equations of the form a◦b = c, where each of “a”, “◦”, “b”, “=”, and “c”
+    # is a seperate token"
+    return torch.stack([x, op, y, eq, result])
 
 def Addition_mod_p_data(p, eq_token, op_token):
     """
@@ -79,7 +101,7 @@ def main(args):
 
     # "We train on the binary operation of Addition mod 97 with 50% of the data
     # in the training set."
-    data = Addition_mod_p_data(args.p, eq_token, op_token)
+    data = Addition_mod_q_data(args.p, eq_token, op_token)
     train_idx, valid_idx = torch.randperm(data.shape[1]).split(data.shape[1] // 2)
     train_data, valid_data = data[:, train_idx], data[:, valid_idx]
 
@@ -148,12 +170,12 @@ def main(args):
 
         if (e + 1) % 1000 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            torch.save(model.state_dict(),'results/mlp_add.pth')
+            torch.save(model.state_dict(),'results/mlp_modp^2.pth')
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--p", type=int, default=23)
+    parser.add_argument("--p", type=int, default=13)
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
