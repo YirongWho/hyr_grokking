@@ -137,8 +137,7 @@ def main(args):
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
             # save steps, train_acc, val_acc, train_loss, val_loss to a file
             torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/mlp/frac={args.train_fraction}.pt")
-    # save model parameters
-    torch.save(model.state_dict(), f"results/mlp_{args.train_fraction}.pth")
+            torch.save(model.state_dict(), f"results/mlp_{args.train_fraction}.pth")
 
 if __name__ == "__main__":
     parser = ArgumentParser()
