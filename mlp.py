@@ -35,11 +35,11 @@ class MLP(nn.Module):
         
         return x
 
-def Addition_mod_q_data(p, eq_token, op_token):
+def Addition_mod_q_data(q, eq_token, op_token):
     """
     x+y
     """
-    q=p**2
+    p = int(math.sqrt(q))
     x = torch.arange(q)
     y = torch.arange(1,q)
     x, y = torch.cartesian_prod(x, y).T
@@ -175,7 +175,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--p", type=int, default=13)
+    parser.add_argument("--p", type=int, default=169)
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
