@@ -7,12 +7,14 @@ from tqdm import tqdm
 import torch
 from torch import nn
 import torch.nn.functional as F
+import copy
 
 class MLP(nn.Module):
     def __init__(self, num_tokens, embedding_dim, hidden_dim, output_dim):
         super(MLP, self).__init__()
         self.num_tokens = num_tokens
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
+        #self.embedding.weight.requires_grad = False
         self.fc1 = nn.Linear(4*embedding_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
@@ -53,7 +55,7 @@ def Addition_mod_p_data(p, eq_token, op_token):
 
 
 def main(args):
-    torch.manual_seed(0)
+    torch.manual_seed(42)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -64,18 +66,22 @@ def main(args):
     op_token = args.p + 1
 
     # We trained a MLP
-    
     model=MLP(num_tokens=args.p+2, embedding_dim=8,hidden_dim=32, output_dim=args.p+2).to(device)
+#     init_weight = copy.deepcopy(model.embedding.weight)
+    #param = torch.load('results/mlp_8_32.pth')
+    # model.load_state_dict(param)
+#     init_weight_norm = torch.norm(init_weight,dim=1).reshape(-1,1)
+#     init_weight = init_weight/init_weight_norm
+#     model.embedding.weight = nn.Parameter(init_weight.to(device))
+
+    # model.fc3.weight = nn.Parameter(param['fc3.weight'].to(device))
+    # model.fc3.bias = nn.Parameter(param['fc3.bias'].to(device))
 
     # "We train on the binary operation of Addition mod 97 with 50% of the data
     # in the training set."
     data = Addition_mod_p_data(args.p, eq_token, op_token)
-    train_fraction = args.train_fraction
-    train_size = int(train_fraction * data.shape[1])
-    rand_perm=torch.randperm(data.shape[1])
-    train_idx, valid_idx = rand_perm[:train_size], rand_perm[train_size:]
+    train_idx, valid_idx = torch.randperm(data.shape[1]).split(data.shape[1] // 2)
     train_data, valid_data = data[:, train_idx], data[:, valid_idx]
-
 
     # For most experiments we used AdamW optimizer with learning rate 10−3,
     # weight decay 1, β1 = 0.9, β2 = 0.98
@@ -95,6 +101,8 @@ def main(args):
 
     train_acc, val_acc, train_loss, val_loss = [], [], [], []
 
+    flag_train = 0
+    flag_val = 0
     for e in tqdm(range(int(args.budget) // steps_per_epoch)):
 
         # randomly shuffle train data
@@ -110,7 +118,6 @@ def main(args):
             dl = torch.split(data, args.batch_size, dim=1)
             for input in dl:
                 input = input.to(device)
-
                 with torch.set_grad_enabled(is_train):
                     logits = model(input[:-1])
                     # calculate loss only on the answer part of the equation (last element
@@ -129,26 +136,30 @@ def main(args):
             if is_train:
                 train_acc.append(total_acc / train_data.shape[-1])
                 train_loss.append(total_loss / train_data.shape[-1])
+                if train_acc[-1]>0.99  and flag_train==0:
+                    print(f'train acc=1 steps:{len(train_acc)*steps_per_epoch}')
+                    flag_train = 1
             else:
                 val_acc.append(total_acc / valid_data.shape[-1])
                 val_loss.append(total_loss / valid_data.shape[-1])
+                if val_acc[-1]>0.99  and flag_val==0:
+                    print(f'val acc=1 steps:{len(train_acc)*steps_per_epoch}')
+                    flag_val = 1
 
-        if (e + 1) % 100 == 0:
+        if (e + 1) % 1000 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            # save steps, train_acc, val_acc, train_loss, val_loss to a file
-            torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/mlp/frac={args.train_fraction}.pt")
-            torch.save(model.state_dict(), f"results/mlp_{args.train_fraction}.pth")
+            torch.save(model.state_dict(),'results/mlp_add.pth')
+
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--p", type=int, default=23)
-    parser.add_argument("--budget", type=int, default=1e5)
+    parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--beta1", type=float, default=0.9)
     parser.add_argument("--beta2", type=float, default=0.98)
     parser.add_argument("--weight_decay", type=float, default=1e-3)
     parser.add_argument("--optimizer", default="Adam")
-    parser.add_argument("--train_fraction", type=float, default=0.5)  
     args = parser.parse_args()
     main(args)
