@@ -65,7 +65,7 @@ def main(args):
 
     # We trained a MLP
     
-    model=MLP(num_tokens=args.p+2, embedding_dim=128,hidden_dim=512, output_dim=args.p+2).to(device)
+    model=MLP(num_tokens=args.p+2, embedding_dim=8,hidden_dim=32, output_dim=args.p+2).to(device)
 
     # "We train on the binary operation of Addition mod 97 with 50% of the data
     # in the training set."
