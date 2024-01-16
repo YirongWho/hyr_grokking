@@ -5,7 +5,7 @@ fractions=[0.3,0.35,0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75]
 reach=[3e4]*len(fractions)
 for fraction in fractions:
     # read from file
-    steps, train_acc, val_acc, train_loss, val_loss = torch.load(f"datas/mlp/frac={fraction}.pt")
+    steps, train_acc, val_acc, train_loss, val_loss = torch.load(f"curve_data/mlp/frac={fraction}.pt")
     maximal_val_acc.append(max(val_acc))
     # print the maximal of val_acc
     print(f"maximal of val_acc: {max(val_acc)}")
@@ -57,7 +57,7 @@ fractions=[0.4,0.45,0.5,0.55,0.6,0.65,0.7,0.75]
 reach=[3e5]*len(fractions)
 for fraction in fractions:
     # read from file
-    steps, train_acc, val_acc, train_loss, val_loss = torch.load(f"datas/lstm/frac={fraction}.pt")
+    steps, train_acc, val_acc, train_loss, val_loss = torch.load(f"curve_data/lstm/frac={fraction}.pt")
     maximal_val_acc.append(max(val_acc))
     # print the maximal of val_acc
     print(f"maximal of val_acc: {max(val_acc)}")

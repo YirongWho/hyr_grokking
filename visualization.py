@@ -40,15 +40,19 @@ class MLP(nn.Module):
     def embed(self,x):
         return self.embedding(x)
 
-p = 23
+p = 49
+mode='modp^2'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = MLP(num_tokens=p+2, embedding_dim=8,hidden_dim=32, output_dim=p+2).to(device)
-model.load_state_dict(torch.load('results/mlp_test_8_32.pth'))
+model.load_state_dict(torch.load(f'params/mlp_{mode}.pth',map_location=device))
 
 x = torch.arange(0,p).to(device)
 y = model.embed(x).cpu().detach().numpy()
 # Specify the number of components to reduce to (in this case, 2)
-num_components = 2
+num_components = 5
+f=1
+s=4
+
 
 # Create a PCA instance and fit_transform the data
 pca = PCA(n_components=num_components)
@@ -56,16 +60,16 @@ reduced_vector = pca.fit_transform(y)
 # norm = np.sqrt(np.sum(reduced_vector**2,axis=1)).reshape(-1,1)
 # reduced_vector = reduced_vector/norm
 plt.figure()
-plt.scatter(reduced_vector[:,0],reduced_vector[:,1])
+plt.scatter(reduced_vector[:,f-1],reduced_vector[:,s-1])
 # add names on every spot
-for label, x_1, y_1 in zip(range(0,p), reduced_vector[:,0], reduced_vector[:,1]):
-    plt.annotate(label,
+for label, x_1, y_1 in zip(range(0,p), reduced_vector[:,f-1], reduced_vector[:,s-1]):
+    plt.annotate((label//7,label%7),
                  (x_1, y_1),
                  textcoords="offset points",
                  xytext=(0,10),
                  ha='center')
-plt.savefig('scatter_plot.png')
-plt.show()
+plt.savefig(f'PCA/scatter_plot_{mode}_{f}{s}.png')
+plt.close()
 
 # Create a 3D scatter plot
 # fig = go.Figure(data=[go.Scatter3d(x=reduced_vector[:,0], y=reduced_vector[:,1], z=reduced_vector[:,2], mode='markers', marker=dict(color='blue', size=8))])

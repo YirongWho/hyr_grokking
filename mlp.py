@@ -90,7 +90,7 @@ def main(args):
     # We trained a MLP
     model=MLP(num_tokens=args.p+2, embedding_dim=8,hidden_dim=32, output_dim=args.p+2).to(device)
 #     init_weight = copy.deepcopy(model.embedding.weight)
-    #param = torch.load('results/mlp_8_32.pth')
+    #param = torch.load('params/mlp_8_32.pth')
     # model.load_state_dict(param)
 #     init_weight_norm = torch.norm(init_weight,dim=1).reshape(-1,1)
 #     init_weight = init_weight/init_weight_norm
@@ -170,12 +170,12 @@ def main(args):
 
         if (e + 1) % 1000 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            torch.save(model.state_dict(),'results/mlp_modp^2.pth')
+            torch.save(model.state_dict(),'params/mlp_modp^2.pth')
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--p", type=int, default=169)
+    parser.add_argument("--p", type=int, default=49)
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)

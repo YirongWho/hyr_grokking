@@ -160,7 +160,7 @@ def main(args):
         if (e + 1) % 100 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
             # save steps, train_acc, val_acc, train_loss, val_loss to a file
-            torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"datas/lstm/frac={args.train_fraction}.pt")
+            torch.save((steps, train_acc, val_acc, train_loss, val_loss), f"curve_data/lstm/frac={args.train_fraction}.pt")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 def main(args):
     model_name=args.model_name
     frac=args.train_fraction
-    file_path = f"datas/{model_name}/frac={frac}.pt"
+    file_path = f"curve_data/{model_name}/frac={frac}.pt"
     # read .pt file 
     steps, train_acc, val_acc, train_loss, val_loss = torch.load(file_path)
 
