@@ -17,7 +17,7 @@ class MLP(nn.Module):
         super(MLP, self).__init__()
         self.num_tokens = num_tokens
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
-        self.fc1 = nn.Linear(4*embedding_dim, hidden_dim)
+        self.fc1 = nn.Linear(2*embedding_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
 
@@ -40,18 +40,18 @@ class MLP(nn.Module):
     def embed(self,x):
         return self.embedding(x)
 
-p = 49
-mode='modp^2'
+gp_size = 2*3*7
+filename='2_3_7_emd16_wid32_2'
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = MLP(num_tokens=p+2, embedding_dim=8,hidden_dim=32, output_dim=p+2).to(device)
-model.load_state_dict(torch.load(f'params/mlp_{mode}.pth',map_location=device))
+model = MLP(num_tokens=gp_size, embedding_dim=16,hidden_dim=32, output_dim=gp_size).to(device)
+model.load_state_dict(torch.load(f'params/2_3_7_emd16_wid32_2.pth',map_location=device))
 
-x = torch.arange(0,p).to(device)
+x = torch.arange(0,gp_size).to(device)
 y = model.embed(x).cpu().detach().numpy()
 # Specify the number of components to reduce to (in this case, 2)
-num_components = 5
-f=1
-s=4
+num_components = 6
+f=5
+s=6
 
 
 # Create a PCA instance and fit_transform the data
@@ -62,13 +62,14 @@ reduced_vector = pca.fit_transform(y)
 plt.figure()
 plt.scatter(reduced_vector[:,f-1],reduced_vector[:,s-1])
 # add names on every spot
-for label, x_1, y_1 in zip(range(0,p), reduced_vector[:,f-1], reduced_vector[:,s-1]):
-    plt.annotate((label//7,label%7),
+# TODO: decode label on every  point?
+for label, x_1, y_1 in zip(range(0,gp_size), reduced_vector[:,f-1], reduced_vector[:,s-1]):
+    plt.annotate(label,
                  (x_1, y_1),
                  textcoords="offset points",
                  xytext=(0,10),
                  ha='center')
-plt.savefig(f'PCA/scatter_plot_{mode}_{f}{s}.png')
+plt.savefig(f'PCA/{filename}_{f}{s}.png')
 plt.close()
 
 # Create a 3D scatter plot
