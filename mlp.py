@@ -189,7 +189,7 @@ def main(args):
 
         if (e + 1) % 1000 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
-            torch.save(model.state_dict(),'params/mlp_modp^2.pth')
+            torch.save(model.state_dict(),f'params/{args.filename}.pth')
 
 
 if __name__ == "__main__":
@@ -202,5 +202,6 @@ if __name__ == "__main__":
     parser.add_argument("--beta2", type=float, default=0.98)
     parser.add_argument("--weight_decay", type=float, default=1e-3)
     parser.add_argument("--optimizer", default="Adam")
+    parser.add_argument("--filename",default="new_experiment")
     args = parser.parse_args()
     main(args)
