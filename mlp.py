@@ -16,8 +16,7 @@ class MLP(nn.Module):
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
         #self.embedding.weight.requires_grad = False
         self.fc1 = nn.Linear(2*embedding_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, output_dim)
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         # x is of shape (2, k)
@@ -214,6 +213,8 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--group", type=lambda x: [int(i) for i in x.split(',')], default=[2,3,7])
+    parser.add_argument("--embedding", type=int, default=8)
+    parser.add_argument("--MLP_width", type=int, default=32)
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
