@@ -35,6 +35,29 @@ class MLP(nn.Module):
         
         return x
 
+def Group_data(gp_struct):
+    '''
+    gp_sturct is a list : [p1,p2,...,pk]. Then the group=Z/p1*Z/p2*...*Z/pk
+    '''
+    q = 1
+    for p in gp_struct:
+        q *= p
+    # construct a list of tensor
+    x = [torch.arange(p) for p in gp_struct]
+    # cartesian product
+    x = torch.cartesian_prod(*x) # x.shape=(q,k)
+    gp_data=torch.zeros((3,q*(q-1))) # datas.shape=(3,q*q)
+    for i in range(q):
+        for j in range(1,q): # j=0 is the identity element, used only once.
+            factor=1
+            for k in range(len(gp_struct)):
+                gp_data[0,i*(q-1)+j-1] +=  x[i,k]*factor
+                gp_data[1,i*(q-1)+j-1] +=  x[j,k]*factor
+                gp_data[2,i*(q-1)+j-1] +=  ((x[i,k]+x[j,k])%gp_struct[k])*factor
+                factor *= gp_struct[k]
+    return gp_data
+            
+
 def Addition_mod_q_data(q, eq_token, op_token):
     """
     x+y
@@ -78,17 +101,13 @@ def Addition_mod_p_data(p, eq_token, op_token):
 
 def main(args):
     torch.manual_seed(42)
-
+    gp_size=1
+    for p in args.group:
+        gp_size *= p
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # tokens for <op> and <=>. It's not clear why <=> is needed at all since it
-    # has no effect on the output, but we'll leave it in to best follow the
-    # paper.
-    eq_token = args.p
-    op_token = args.p + 1
-
-    # We trained a MLP
-    model=MLP(num_tokens=args.p+2, embedding_dim=8,hidden_dim=32, output_dim=args.p+2).to(device)
+    
+        # We trained a MLP
+    model=MLP(num_tokens=gp_size, embedding_dim=8,hidden_dim=32, output_dim=gp_size).to(device)
 #     init_weight = copy.deepcopy(model.embedding.weight)
     #param = torch.load('params/mlp_8_32.pth')
     # model.load_state_dict(param)
@@ -101,7 +120,7 @@ def main(args):
 
     # "We train on the binary operation of Addition mod 97 with 50% of the data
     # in the training set."
-    data = Addition_mod_q_data(args.p, eq_token, op_token)
+    data = Group_data(args.group)
     train_idx, valid_idx = torch.randperm(data.shape[1]).split(data.shape[1] // 2)
     train_data, valid_data = data[:, train_idx], data[:, valid_idx]
 
@@ -175,7 +194,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--p", type=int, default=49)
+    parser.add_argument("--group", type=list, default=[2,3,5])
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
