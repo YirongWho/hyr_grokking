@@ -107,7 +107,7 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
         # We trained a MLP
-    model=MLP(num_tokens=gp_size, embedding_dim=8,hidden_dim=16, output_dim=gp_size).to(device)
+    model=MLP(num_tokens=gp_size, embedding_dim=16,hidden_dim=32, output_dim=gp_size).to(device)
 #     init_weight = copy.deepcopy(model.embedding.weight)
     #param = torch.load('params/mlp_8_32.pth')
     # model.load_state_dict(param)
