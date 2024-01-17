@@ -29,8 +29,7 @@ class MLP(nn.Module):
     
         # Pass the embeddings through the MLP
         x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.fc2(x)
         
         return x
 
