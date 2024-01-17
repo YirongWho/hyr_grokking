@@ -15,12 +15,12 @@ class MLP(nn.Module):
         self.num_tokens = num_tokens
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
         #self.embedding.weight.requires_grad = False
-        self.fc1 = nn.Linear(4*embedding_dim, hidden_dim)
+        self.fc1 = nn.Linear(2*embedding_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
-        # x is of shape (4, k)
+        # x is of shape (2, k)
 
         # Pass each part through the embedding layer
         x_parts = [self.embedding(x_part) for x_part in x]
@@ -46,14 +46,14 @@ def Group_data(gp_struct):
     x = [torch.arange(p) for p in gp_struct]
     # cartesian product
     x = torch.cartesian_prod(*x) # x.shape=(q,k)
-    gp_data=torch.zeros((3,q*(q-1))) # datas.shape=(3,q*q)
+    gp_data = torch.zeros((3, q*(q-1)), dtype=torch.int64) # Specify dtype as torch.int64
     for i in range(q):
-        for j in range(1,q): # j=0 is the identity element, used only once.
-            factor=1
+        for j in range(1, q): # j=0 is the identity element, used only once.
+            factor = 1
             for k in range(len(gp_struct)):
-                gp_data[0,i*(q-1)+j-1] +=  x[i,k]*factor
-                gp_data[1,i*(q-1)+j-1] +=  x[j,k]*factor
-                gp_data[2,i*(q-1)+j-1] +=  ((x[i,k]+x[j,k])%gp_struct[k])*factor
+                gp_data[0, i*(q-1)+j-1] += x[i, k]*factor
+                gp_data[1, i*(q-1)+j-1] += x[j, k]*factor
+                gp_data[2, i*(q-1)+j-1] += ((x[i, k]+x[j, k]) % gp_struct[k])*factor
                 factor *= gp_struct[k]
     return gp_data
             
@@ -107,7 +107,7 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
         # We trained a MLP
-    model=MLP(num_tokens=gp_size, embedding_dim=8,hidden_dim=32, output_dim=gp_size).to(device)
+    model=MLP(num_tokens=gp_size, embedding_dim=8,hidden_dim=16, output_dim=gp_size).to(device)
 #     init_weight = copy.deepcopy(model.embedding.weight)
     #param = torch.load('params/mlp_8_32.pth')
     # model.load_state_dict(param)
@@ -189,12 +189,31 @@ def main(args):
 
         if (e + 1) % 1000 == 0:
             steps = torch.arange(len(train_acc)).numpy() * steps_per_epoch
+            plt.plot(steps, train_acc, label="train")
+            plt.plot(steps, val_acc, label="val")
+            plt.legend()
+            plt.title(f"Abelian group {args.group} (training on 50% of data)")
+            plt.xlabel("Optimization Steps")
+            plt.ylabel("Accuracy")
+            plt.xscale("log", base=10)
+            plt.savefig(f"figures/{args.filename}_acc.png", dpi=150)
+            plt.close()
+
+            plt.plot(steps, train_loss, label="train")
+            plt.plot(steps, val_loss, label="val")
+            plt.legend()
+            plt.title(f"Abelian group {args.group} (training on 50% of data)")
+            plt.xlabel("Optimization Steps")
+            plt.ylabel("Loss")
+            plt.xscale("log", base=10)
+            plt.savefig(f"figures/{args.filename}_loss.png", dpi=150)
+            plt.close()
             torch.save(model.state_dict(),f'params/{args.filename}.pth')
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("--group", type=list, default=[2,3,5])
+    parser.add_argument("--group", type=lambda x: [int(i) for i in x.split(',')], default=[2,3,7])
     parser.add_argument("--budget", type=int, default=3e5)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--lr", type=float, default=1e-3)
