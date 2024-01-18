@@ -18,11 +18,10 @@ class MLP(nn.Module):
         self.num_tokens = num_tokens
         self.embedding = nn.Embedding(num_tokens, embedding_dim)
         self.fc1 = nn.Linear(2*embedding_dim, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, output_dim)
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
-        # x is of shape (4, k)
+        # x is of shape (2, k)
 
         # Pass each part through the embedding layer
         x_parts = [self.embedding(x_part) for x_part in x]
@@ -32,8 +31,7 @@ class MLP(nn.Module):
     
         # Pass the embeddings through the MLP
         x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = self.fc2(x)
         
         return x
     
@@ -41,17 +39,20 @@ class MLP(nn.Module):
         return self.embedding(x)
 
 gp_size = 2*3*7
-filename='2_3_7_emd16_wid32_2'
+filename='2_3_7_emd16_wid64_1'
+
+# Specify the number of components to reduce to (in this case, 2)
+num_components = 6
+f=3
+s=4
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = MLP(num_tokens=gp_size, embedding_dim=16,hidden_dim=32, output_dim=gp_size).to(device)
-model.load_state_dict(torch.load(f'params/2_3_7_emd16_wid32_2.pth',map_location=device))
+model = MLP(num_tokens=gp_size, embedding_dim=16,hidden_dim=64, output_dim=gp_size).to(device)
+model.load_state_dict(torch.load(f'params/{filename}.pth',map_location=device))
 
 x = torch.arange(0,gp_size).to(device)
 y = model.embed(x).cpu().detach().numpy()
-# Specify the number of components to reduce to (in this case, 2)
-num_components = 6
-f=5
-s=6
+
 
 
 # Create a PCA instance and fit_transform the data
